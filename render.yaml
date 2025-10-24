@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: flowkit-api
+    env: go
+    region: oregon # or singapore, frankfurt, etc.
+    plan: free # free tier
+    branch: main # or your default branch
+    buildCommand: go build -o flowkit-api main.go
+    startCommand: ./flowkit-api
+    envVars:
+      - key: MONGODB_URI
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true # Auto-generate secure secret
+      - key: GIN_MODE
+        value: release
+      - key: PORT
+        value: 5000
+    healthCheckPath: /api/health
