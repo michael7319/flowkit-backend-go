@@ -8,6 +8,15 @@ import (
 
 // SetupRoutes configures all API routes
 func SetupRoutes(router *gin.Engine) {
+	// Root endpoint - for Render health checks
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"message": "FlowKit API is running",
+			"version": "1.0.0",
+		})
+	})
+
 	// API prefix
 	api := router.Group("/api")
 
