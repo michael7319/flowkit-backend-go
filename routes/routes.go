@@ -69,8 +69,14 @@ func SetupRoutes(router *gin.Engine) {
 	admin := api.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.AuthorizeRoles("admin"))
 	{
-		admin.GET("/users", handlers.GetUsers)
-		// Add more admin-specific routes here
+		// User Management
+		admin.POST("/users", handlers.AdminCreateUser)                              // Create user
+		admin.GET("/users", handlers.AdminGetAllUsers)                              // Get all users (with filters)
+		admin.PUT("/users/:id", handlers.AdminUpdateUser)                           // Update user info
+		admin.PUT("/users/:id/activate", handlers.AdminActivateUser)                // Activate user
+		admin.PUT("/users/:id/deactivate", handlers.AdminDeactivateUser)            // Deactivate user
+		admin.PUT("/users/:id/password", handlers.AdminResetUserPassword)           // Reset password
+		admin.PUT("/users/:id/leave-balance", handlers.AdminUpdateUserLeaveBalance) // Update leave balance
 	}
 
 	// Health check
