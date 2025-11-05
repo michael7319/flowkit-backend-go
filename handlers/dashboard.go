@@ -53,16 +53,22 @@ func GetDashboardStats(c *gin.Context) {
 		}
 	}
 
-	// Approved leaves count
+	// Approved leaves count (only count if all three stages are approved)
 	approvedCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
-		"employee": userID,
-		"status":   "Approved",
+		"employee":          userID,
+		"hodApprovalStatus": "approved",
+		"hrApprovalStatus":  "approved",
+		"gedApprovalStatus": "approved",
 	})
 
-	// Rejected leaves count
+	// Rejected leaves count (rejected at any stage)
 	rejectedCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
 		"employee": userID,
-		"status":   "Rejected",
+		"$or": []bson.M{
+			{"hodApprovalStatus": "rejected"},
+			{"hrApprovalStatus": "rejected"},
+			{"gedApprovalStatus": "rejected"},
+		},
 	})
 
 	c.JSON(http.StatusOK, gin.H{
@@ -211,25 +217,55 @@ func GetGraphData(c *gin.Context) {
 		}
 	}
 
-	// Fill in data from aggregation results
-	for _, result := range results {
-		idMap := result["_id"].(bson.M)
-		monthNum := int(idMap["month"].(int32))
-		status := idMap["status"].(string)
+	// Get all leaves for the year to check approval statuses
+	var allLeaves []bson.M
+	leavesCursor, _ := config.LeavesCollection.Find(ctx, bson.M{
+		"employee": userID,
+		"$expr": bson.M{
+			"$eq": bson.A{
+				bson.M{"$year": "$fromDate"},
+				year,
+			},
+		},
+	})
+	leavesCursor.All(ctx, &allLeaves)
+	leavesCursor.Close(ctx)
+
+	// Fill in data based on actual approval statuses
+	for _, leave := range allLeaves {
+		fromDate := leave["fromDate"].(primitive.DateTime).Time().Local()
+		monthNum := int(fromDate.Month())
 		totalDays := 0
-		if days, ok := result["totalDays"].(int32); ok {
+		if days, ok := leave["totalDays"].(int32); ok {
 			totalDays = int(days)
 		}
 
 		if monthNum >= 1 && monthNum <= 12 {
 			monthKey := months[monthNum-1]
-			// Categorize by actual status
-			if status == "Pending" {
-				monthlyData[monthKey]["pending"] += totalDays
-			} else if status == "Approved" || status == "Active" || status == "Over" {
-				monthlyData[monthKey]["approved"] += totalDays
-			} else if status == "Rejected" {
+
+			// Check approval statuses
+			hodStatus := ""
+			hrStatus := ""
+			gedStatus := ""
+			if s, ok := leave["hodApprovalStatus"].(string); ok {
+				hodStatus = s
+			}
+			if s, ok := leave["hrApprovalStatus"].(string); ok {
+				hrStatus = s
+			}
+			if s, ok := leave["gedApprovalStatus"].(string); ok {
+				gedStatus = s
+			}
+
+			// Categorize by approval status
+			if hodStatus == "rejected" || hrStatus == "rejected" || gedStatus == "rejected" {
 				monthlyData[monthKey]["rejected"] += totalDays
+			} else if hodStatus == "approved" && hrStatus == "approved" && gedStatus == "approved" {
+				// Fully approved - all three stages passed
+				monthlyData[monthKey]["approved"] += totalDays
+			} else {
+				// Still pending (not fully approved yet)
+				monthlyData[monthKey]["pending"] += totalDays
 			}
 		}
 	}
@@ -295,17 +331,40 @@ func GetAllDashboardData(c *gin.Context) {
 
 	// Get stats
 	totalLeaves, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{"employee": userID})
+
+	// Pending count (not fully approved yet, not rejected)
 	pendingCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
 		"employee": userID,
-		"status":   "Pending",
+		"$and": []bson.M{
+			{
+				"$or": []bson.M{
+					{"hodApprovalStatus": "pending"},
+					{"hrApprovalStatus": "pending"},
+					{"gedApprovalStatus": "pending"},
+				},
+			},
+			{"hodApprovalStatus": bson.M{"$ne": "rejected"}},
+			{"hrApprovalStatus": bson.M{"$ne": "rejected"}},
+			{"gedApprovalStatus": bson.M{"$ne": "rejected"}},
+		},
 	})
+
+	// Approved count (all three stages approved)
 	approvedCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
-		"employee": userID,
-		"status":   "Approved",
+		"employee":          userID,
+		"hodApprovalStatus": "approved",
+		"hrApprovalStatus":  "approved",
+		"gedApprovalStatus": "approved",
 	})
+
+	// Rejected count (rejected at any stage)
 	rejectedCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
 		"employee": userID,
-		"status":   "Rejected",
+		"$or": []bson.M{
+			{"hodApprovalStatus": "rejected"},
+			{"hrApprovalStatus": "rejected"},
+			{"gedApprovalStatus": "rejected"},
+		},
 	})
 
 	// Get recent leaves

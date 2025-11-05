@@ -23,6 +23,7 @@ type AdminCreateUserRequest struct {
 	Password   string `json:"password" binding:"required,min=6"`
 	Department string `json:"department" binding:"required"`
 	Role       string `json:"role" binding:"required"`
+	IsHOD      bool   `json:"isHOD,omitempty"` // Head of Department flag
 	StaffID    string `json:"staffId,omitempty"`
 	TotalLeave int    `json:"totalLeave,omitempty"` // Optional, defaults to 28
 	IsActive   *bool  `json:"isActive,omitempty"`   // Optional, defaults to true
@@ -35,6 +36,7 @@ type AdminUpdateUserRequest struct {
 	Email      string `json:"email,omitempty"`
 	Department string `json:"department,omitempty"`
 	Role       string `json:"role,omitempty"`
+	IsHOD      *bool  `json:"isHOD,omitempty"`
 	StaffID    string `json:"staffId,omitempty"`
 	IsActive   *bool  `json:"isActive,omitempty"`
 }
@@ -135,6 +137,7 @@ func AdminCreateUser(c *gin.Context) {
 		StaffID:    staffID,
 		Department: req.Department,
 		Role:       req.Role,
+		IsHOD:      req.IsHOD,
 		LeaveBalance: models.LeaveBalance{
 			Total:     totalLeave,
 			Available: totalLeave,
@@ -234,6 +237,9 @@ func AdminUpdateUser(c *gin.Context) {
 	}
 	if req.StaffID != "" {
 		updateFields["staffId"] = req.StaffID
+	}
+	if req.IsHOD != nil {
+		updateFields["isHOD"] = *req.IsHOD
 	}
 	if req.IsActive != nil {
 		updateFields["isActive"] = *req.IsActive

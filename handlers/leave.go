@@ -140,10 +140,16 @@ func CreateLeave(c *gin.Context) {
 		Status:         "Pending",
 		Stage:          1, // Start at HOD approval
 		ApprovalFlow:   []models.ApprovalStep{},
-		IsEditable:     true,
-		IsActive:       false,
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+
+		// Initialize multi-stage approval statuses
+		HODApprovalStatus: "pending",
+		HRApprovalStatus:  "pending",
+		GEDApprovalStatus: "pending",
+
+		IsEditable: true,
+		IsActive:   false,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	_, err = config.LeavesCollection.InsertOne(ctx, leave)

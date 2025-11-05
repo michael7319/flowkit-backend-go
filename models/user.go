@@ -16,6 +16,7 @@ type User struct {
 	StaffID      string             `bson:"staffId" json:"staffId"`
 	Department   string             `bson:"department" json:"department" binding:"required"`
 	Role         string             `bson:"role" json:"role"`
+	IsHOD        bool               `bson:"isHOD" json:"isHOD"` // Head of Department flag
 	Signature    string             `bson:"signature,omitempty" json:"signature,omitempty"`
 	LeaveBalance LeaveBalance       `bson:"leaveBalance" json:"leaveBalance"`
 	IsActive     bool               `bson:"isActive" json:"isActive"`
@@ -39,6 +40,7 @@ type UserResponse struct {
 	StaffID      string             `json:"staffId"`
 	Department   string             `json:"department"`
 	Role         string             `json:"role"`
+	IsHOD        bool               `json:"isHOD"`
 	Signature    string             `json:"signature,omitempty"`
 	LeaveBalance LeaveBalance       `json:"leaveBalance"`
 	IsActive     bool               `json:"isActive"`
@@ -56,6 +58,7 @@ func (u *User) ToResponse() UserResponse {
 		StaffID:      u.StaffID,
 		Department:   u.Department,
 		Role:         u.Role,
+		IsHOD:        u.IsHOD,
 		Signature:    u.Signature,
 		LeaveBalance: u.LeaveBalance,
 		IsActive:     u.IsActive,

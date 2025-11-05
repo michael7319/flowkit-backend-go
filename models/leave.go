@@ -20,10 +20,27 @@ type Leave struct {
 	Status         string             `bson:"status" json:"status"`
 	Stage          int                `bson:"stage" json:"stage"`
 	ApprovalFlow   []ApprovalStep     `bson:"approvalFlow" json:"approvalFlow"`
-	IsEditable     bool               `bson:"isEditable" json:"isEditable"`
-	IsActive       bool               `bson:"isActive" json:"isActive"`
-	CreatedAt      time.Time          `bson:"createdAt" json:"createdAt"`
-	UpdatedAt      time.Time          `bson:"updatedAt" json:"updatedAt"`
+
+	// Multi-stage approval tracking
+	HODApprovalStatus  string             `bson:"hodApprovalStatus" json:"hodApprovalStatus"`
+	HODApprovalDate    *time.Time         `bson:"hodApprovalDate,omitempty" json:"hodApprovalDate,omitempty"`
+	HODApprovalComment string             `bson:"hodApprovalComment,omitempty" json:"hodApprovalComment,omitempty"`
+	HODApprover        primitive.ObjectID `bson:"hodApprover,omitempty" json:"hodApprover,omitempty"`
+
+	HRApprovalStatus  string             `bson:"hrApprovalStatus" json:"hrApprovalStatus"`
+	HRApprovalDate    *time.Time         `bson:"hrApprovalDate,omitempty" json:"hrApprovalDate,omitempty"`
+	HRApprovalComment string             `bson:"hrApprovalComment,omitempty" json:"hrApprovalComment,omitempty"`
+	HRApprover        primitive.ObjectID `bson:"hrApprover,omitempty" json:"hrApprover,omitempty"`
+
+	GEDApprovalStatus  string             `bson:"gedApprovalStatus" json:"gedApprovalStatus"`
+	GEDApprovalDate    *time.Time         `bson:"gedApprovalDate,omitempty" json:"gedApprovalDate,omitempty"`
+	GEDApprovalComment string             `bson:"gedApprovalComment,omitempty" json:"gedApprovalComment,omitempty"`
+	GEDApprover        primitive.ObjectID `bson:"gedApprover,omitempty" json:"gedApprover,omitempty"`
+
+	IsEditable bool      `bson:"isEditable" json:"isEditable"`
+	IsActive   bool      `bson:"isActive" json:"isActive"`
+	CreatedAt  time.Time `bson:"createdAt" json:"createdAt"`
+	UpdatedAt  time.Time `bson:"updatedAt" json:"updatedAt"`
 }
 
 // ApprovalStep represents one approval in the workflow
@@ -49,10 +66,27 @@ type LeaveResponse struct {
 	Status         string               `json:"status"`
 	Stage          int                  `json:"stage"`
 	ApprovalFlow   []ApprovalStepDetail `json:"approvalFlow"`
-	IsEditable     bool                 `json:"isEditable"`
-	IsActive       bool                 `json:"isActive"`
-	CreatedAt      time.Time            `json:"createdAt"`
-	UpdatedAt      time.Time            `json:"updatedAt"`
+
+	// Multi-stage approval tracking
+	HODApprovalStatus  string        `json:"hodApprovalStatus"`
+	HODApprovalDate    *time.Time    `json:"hodApprovalDate,omitempty"`
+	HODApprovalComment string        `json:"hodApprovalComment,omitempty"`
+	HODApprover        *ApproverInfo `json:"hodApprover,omitempty"`
+
+	HRApprovalStatus  string        `json:"hrApprovalStatus"`
+	HRApprovalDate    *time.Time    `json:"hrApprovalDate,omitempty"`
+	HRApprovalComment string        `json:"hrApprovalComment,omitempty"`
+	HRApprover        *ApproverInfo `json:"hrApprover,omitempty"`
+
+	GEDApprovalStatus  string        `json:"gedApprovalStatus"`
+	GEDApprovalDate    *time.Time    `json:"gedApprovalDate,omitempty"`
+	GEDApprovalComment string        `json:"gedApprovalComment,omitempty"`
+	GEDApprover        *ApproverInfo `json:"gedApprover,omitempty"`
+
+	IsEditable bool      `json:"isEditable"`
+	IsActive   bool      `json:"isActive"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 // ApprovalStepDetail includes approver details
@@ -110,6 +144,11 @@ var ValidLeaveStatuses = []string{
 // Valid approval roles
 var ValidApprovalRoles = []string{
 	"HOD", "HR", "GED",
+}
+
+// Valid approval stage statuses
+var ValidApprovalStageStatuses = []string{
+	"pending", "approved", "rejected",
 }
 
 // IsValidLeaveType checks if leave type is valid

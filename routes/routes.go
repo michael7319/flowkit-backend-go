@@ -58,10 +58,37 @@ func SetupRoutes(router *gin.Engine) {
 			leaves.DELETE("/:id", handlers.DeleteLeave)
 			leaves.PUT("/:id/cancel", handlers.CancelLeave)
 
-			// Approver routes (HOD, HR, GED)
-			leaves.GET("", middleware.AuthorizeRoles("HOD", "HR", "GED", "admin"), handlers.GetAllLeaves)
-			leaves.PUT("/:id/approve", middleware.AuthorizeRoles("HOD", "HR", "GED", "admin"), handlers.ApproveLeave)
-			leaves.PUT("/:id/reject", middleware.AuthorizeRoles("HOD", "HR", "GED", "admin"), handlers.RejectLeave)
+			// General approver routes (for backward compatibility)
+			leaves.GET("", middleware.AuthorizeRoles("hod", "hr", "ged", "admin"), handlers.GetAllLeaves)
+			leaves.PUT("/:id/approve", middleware.AuthorizeRoles("hod", "hr", "ged", "admin"), handlers.ApproveLeave)
+			leaves.PUT("/:id/reject", middleware.AuthorizeRoles("hod", "hr", "ged", "admin"), handlers.RejectLeave)
+		}
+
+		// HOD-specific approval routes
+		hod := protected.Group("/hod")
+		hod.Use(middleware.AuthorizeRoles("hod", "admin"))
+		{
+			hod.GET("/leaves", handlers.GetHODLeaves)                // Get department leaves
+			hod.PUT("/leaves/:id/approve", handlers.HODApproveLeave) // HOD approve
+			hod.PUT("/leaves/:id/reject", handlers.HODRejectLeave)   // HOD reject
+		}
+
+		// HR-specific approval routes
+		hr := protected.Group("/hr")
+		hr.Use(middleware.AuthorizeRoles("hr", "admin"))
+		{
+			hr.GET("/leaves", handlers.GetHRLeaves)                // Get HOD-approved leaves
+			hr.PUT("/leaves/:id/approve", handlers.HRApproveLeave) // HR approve
+			hr.PUT("/leaves/:id/reject", handlers.HRRejectLeave)   // HR reject
+		}
+
+		// GED-specific approval routes
+		ged := protected.Group("/ged")
+		ged.Use(middleware.AuthorizeRoles("ged", "admin"))
+		{
+			ged.GET("/leaves", handlers.GetGEDLeaves)                // Get HR-approved leaves
+			ged.PUT("/leaves/:id/approve", handlers.GEDApproveLeave) // GED approve (final)
+			ged.PUT("/leaves/:id/reject", handlers.GEDRejectLeave)   // GED reject
 		}
 
 		// Dashboard routes
