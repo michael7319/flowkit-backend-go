@@ -105,6 +105,9 @@ func SetupRoutes(router *gin.Engine) {
 	admin := api.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.AuthorizeRoles("admin"))
 	{
+		// Dashboard
+		admin.GET("/dashboard/stats", handlers.GetAdminDashboardStats) // Admin dashboard stats
+
 		// User Management
 		admin.POST("/users", handlers.AdminCreateUser)                              // Create user
 		admin.GET("/users", handlers.AdminGetAllUsers)                              // Get all users (with filters)

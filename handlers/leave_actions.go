@@ -101,6 +101,13 @@ func ApproveLeave(c *gin.Context) {
 				"updatedAt":              time.Now(),
 			}},
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"message": "Failed to update leave balance",
+			})
+			return
+		}
 	}
 
 	leave.UpdatedAt = time.Now()

@@ -406,3 +406,95 @@ func GetAllDashboardData(c *gin.Context) {
 		},
 	})
 }
+
+// GetAdminDashboardStats returns dashboard statistics for admin users
+func GetAdminDashboardStats(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Get total employees (active users)
+	totalEmployees, _ := config.UsersCollection.CountDocuments(ctx, bson.M{"isActive": true})
+
+	// Get employees currently on leave (approved and dates include today)
+	today := time.Now()
+	onLeaveCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
+		"hodApprovalStatus": "approved",
+		"hrApprovalStatus":  "approved",
+		"gedApprovalStatus": "approved",
+		"fromDate":          bson.M{"$lte": today},
+		"toDate":            bson.M{"$gte": today},
+	})
+
+	// On site = total employees - on leave
+	onSite := int64(0)
+	if totalEmployees > onLeaveCount {
+		onSite = totalEmployees - onLeaveCount
+	}
+
+	// Pending approvals (any stage pending)
+	pendingCount, _ := config.LeavesCollection.CountDocuments(ctx, bson.M{
+		"$or": []bson.M{
+			{"hodApprovalStatus": "pending"},
+			{
+				"hodApprovalStatus": "approved",
+				"hrApprovalStatus":  "pending",
+			},
+			{
+				"hodApprovalStatus": "approved",
+				"hrApprovalStatus":  "approved",
+				"gedApprovalStatus": "pending",
+			},
+		},
+	})
+
+	// Get recent leave requests
+	pipeline := []bson.M{
+		{"$sort": bson.M{"createdAt": -1}},
+		{"$limit": 10},
+		{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "employee",
+				"foreignField": "_id",
+				"as":           "employeeData",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path": "$employeeData",
+			},
+		},
+		{
+			"$lookup": bson.M{
+				"from":         "users",
+				"localField":   "reliever",
+				"foreignField": "_id",
+				"as":           "relieverData",
+			},
+		},
+		{
+			"$unwind": bson.M{
+				"path":                       "$relieverData",
+				"preserveNullAndEmptyArrays": true,
+			},
+		},
+	}
+
+	cursor, _ := config.LeavesCollection.Aggregate(ctx, pipeline)
+	var recentLeaves []bson.M
+	cursor.All(ctx, &recentLeaves)
+	cursor.Close(ctx)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"stats": gin.H{
+				"totalEmployees":   totalEmployees,
+				"onLeave":          onLeaveCount,
+				"onSite":           onSite,
+				"pendingApprovals": pendingCount,
+			},
+			"recentLeaves": recentLeaves,
+		},
+	})
+}

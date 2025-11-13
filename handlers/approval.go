@@ -617,7 +617,56 @@ func GetHODLeaves(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, leaves)
+	// Populate employee data for each leave
+	leaveResponses := make([]gin.H, len(leaves))
+	for i, leave := range leaves {
+		// Get employee info
+		var employee models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Employee}).Decode(&employee)
+
+		// Get reliever info
+		var reliever models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Reliever}).Decode(&reliever)
+
+		leaveResponses[i] = gin.H{
+			"id": leave.ID,
+			"employee": gin.H{
+				"id":         employee.ID,
+				"firstName":  employee.FirstName,
+				"lastName":   employee.LastName,
+				"department": employee.Department,
+			},
+			"leaveType":      leave.LeaveType,
+			"otherLeaveType": leave.OtherLeaveType,
+			"fromDate":       leave.FromDate,
+			"toDate":         leave.ToDate,
+			"totalDays":      leave.TotalDays,
+			"reason":         leave.Reason,
+			"reliever": gin.H{
+				"id":        reliever.ID,
+				"firstName": reliever.FirstName,
+				"lastName":  reliever.LastName,
+			},
+			"status":             leave.Status,
+			"hodApprovalStatus":  leave.HODApprovalStatus,
+			"hodApprovalDate":    leave.HODApprovalDate,
+			"hodApprovalComment": leave.HODApprovalComment,
+			"hrApprovalStatus":   leave.HRApprovalStatus,
+			"hrApprovalDate":     leave.HRApprovalDate,
+			"hrApprovalComment":  leave.HRApprovalComment,
+			"gedApprovalStatus":  leave.GEDApprovalStatus,
+			"gedApprovalDate":    leave.GEDApprovalDate,
+			"gedApprovalComment": leave.GEDApprovalComment,
+			"isEditable":         leave.IsEditable,
+			"isActive":           leave.IsActive,
+			"createdAt":          leave.CreatedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"leaves":  leaveResponses,
+	})
 }
 
 // GetHRLeaves returns leave requests for HR to review (HOD approved only)
@@ -642,7 +691,56 @@ func GetHRLeaves(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, leaves)
+	// Populate employee data for each leave
+	leaveResponses := make([]gin.H, len(leaves))
+	for i, leave := range leaves {
+		// Get employee info
+		var employee models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Employee}).Decode(&employee)
+
+		// Get reliever info
+		var reliever models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Reliever}).Decode(&reliever)
+
+		leaveResponses[i] = gin.H{
+			"id": leave.ID,
+			"employee": gin.H{
+				"id":         employee.ID,
+				"firstName":  employee.FirstName,
+				"lastName":   employee.LastName,
+				"department": employee.Department,
+			},
+			"leaveType":      leave.LeaveType,
+			"otherLeaveType": leave.OtherLeaveType,
+			"fromDate":       leave.FromDate,
+			"toDate":         leave.ToDate,
+			"totalDays":      leave.TotalDays,
+			"reason":         leave.Reason,
+			"reliever": gin.H{
+				"id":        reliever.ID,
+				"firstName": reliever.FirstName,
+				"lastName":  reliever.LastName,
+			},
+			"status":             leave.Status,
+			"hodApprovalStatus":  leave.HODApprovalStatus,
+			"hodApprovalDate":    leave.HODApprovalDate,
+			"hodApprovalComment": leave.HODApprovalComment,
+			"hrApprovalStatus":   leave.HRApprovalStatus,
+			"hrApprovalDate":     leave.HRApprovalDate,
+			"hrApprovalComment":  leave.HRApprovalComment,
+			"gedApprovalStatus":  leave.GEDApprovalStatus,
+			"gedApprovalDate":    leave.GEDApprovalDate,
+			"gedApprovalComment": leave.GEDApprovalComment,
+			"isEditable":         leave.IsEditable,
+			"isActive":           leave.IsActive,
+			"createdAt":          leave.CreatedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"leaves":  leaveResponses,
+	})
 }
 
 // GetGEDLeaves returns leave requests for GED to review (HOD and HR approved only)
@@ -668,5 +766,54 @@ func GetGEDLeaves(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, leaves)
+	// Populate employee data for each leave
+	leaveResponses := make([]gin.H, len(leaves))
+	for i, leave := range leaves {
+		// Get employee info
+		var employee models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Employee}).Decode(&employee)
+
+		// Get reliever info
+		var reliever models.User
+		config.UsersCollection.FindOne(ctx, bson.M{"_id": leave.Reliever}).Decode(&reliever)
+
+		leaveResponses[i] = gin.H{
+			"id": leave.ID,
+			"employee": gin.H{
+				"id":         employee.ID,
+				"firstName":  employee.FirstName,
+				"lastName":   employee.LastName,
+				"department": employee.Department,
+			},
+			"leaveType":      leave.LeaveType,
+			"otherLeaveType": leave.OtherLeaveType,
+			"fromDate":       leave.FromDate,
+			"toDate":         leave.ToDate,
+			"totalDays":      leave.TotalDays,
+			"reason":         leave.Reason,
+			"reliever": gin.H{
+				"id":        reliever.ID,
+				"firstName": reliever.FirstName,
+				"lastName":  reliever.LastName,
+			},
+			"status":             leave.Status,
+			"hodApprovalStatus":  leave.HODApprovalStatus,
+			"hodApprovalDate":    leave.HODApprovalDate,
+			"hodApprovalComment": leave.HODApprovalComment,
+			"hrApprovalStatus":   leave.HRApprovalStatus,
+			"hrApprovalDate":     leave.HRApprovalDate,
+			"hrApprovalComment":  leave.HRApprovalComment,
+			"gedApprovalStatus":  leave.GEDApprovalStatus,
+			"gedApprovalDate":    leave.GEDApprovalDate,
+			"gedApprovalComment": leave.GEDApprovalComment,
+			"isEditable":         leave.IsEditable,
+			"isActive":           leave.IsActive,
+			"createdAt":          leave.CreatedAt,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"leaves":  leaveResponses,
+	})
 }
